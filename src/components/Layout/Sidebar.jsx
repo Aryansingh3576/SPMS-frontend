@@ -3,7 +3,7 @@ import { LayoutDashboard, Activity, Settings, Sprout } from "lucide-react";
 
 export default function Sidebar() {
   return (
-    <aside className="w-64 bg-gradient-to-b from-green-800 via-green-700 to-green-900 text-white h-screen shadow-2xl">
+    <aside className="hidden lg:block fixed left-0 top-0 w-64 bg-gradient-to-b from-green-800 via-green-700 to-green-900 text-white h-screen shadow-2xl z-30">
       <div className="p-6 flex flex-col h-full">
         {/* Logo Section */}
         <div className="mb-8 pb-6 border-b border-green-600">
