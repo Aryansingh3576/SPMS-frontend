@@ -1,192 +1,281 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Sidebar from "../components/Layout/Sidebar";
 import Navbar from "../components/Layout/Navbar";
-import axios from "../services/api";
-import { Thermometer, Droplets, Sprout, Activity, RefreshCw } from "lucide-react";
+import AIChatbot from "../components/AIChatbot";
+import { Thermometer, Droplets, Sprout, Activity, Bot, Sparkles, MessageSquare, Send, CheckCircle2, AlertTriangle, Save, Loader2 } from "lucide-react";
+import { useTheme } from "../context/ThemeContext";
 
 export default function Sensors() {
-  const [sensor, setSensor] = useState(null);
+  const { theme } = useTheme();
+  const [temp, setTemp] = useState("");
+  const [humidity, setHumidity] = useState("");
+  const [soilMoisture, setSoilMoisture] = useState("");
+  const [aiAdvice, setAiAdvice] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  const fetchData = async () => {
-    try {
-      const res = await axios.get("/sensor/latest");
-      setSensor(res.data);
-    } catch (err) {
-      console.log(err);
-    }
-  };
+  // Follow-up state
+  const [question, setQuestion] = useState("");
+  const [chatHistory, setChatHistory] = useState([]);
 
+  // Load saved inputs on mount
   useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, 3000); // refresh every 3 sec
-    return () => clearInterval(interval);
+    const savedInputs = JSON.parse(localStorage.getItem('sensorInputs') || '{}');
+    if (savedInputs.temp) setTemp(savedInputs.temp);
+    if (savedInputs.humidity) setHumidity(savedInputs.humidity);
+    if (savedInputs.soilMoisture) setSoilMoisture(savedInputs.soilMoisture);
   }, []);
 
+  const saveData = () => {
+    localStorage.setItem('sensorInputs', JSON.stringify({ temp, humidity, soilMoisture }));
+    alert("Readings saved successfully!");
+  };
+
+  const generateAIAdvice = () => {
+    if (!temp || !humidity || !soilMoisture) {
+      alert("Please enter all sensor values first!");
+      return;
+    }
+
+    setLoading(true);
+    setAiAdvice(null);
+
+    // Simulate AI Analysis
+    setTimeout(() => {
+      const t = parseInt(temp);
+      const h = parseInt(humidity);
+      const m = parseInt(soilMoisture);
+
+      let status = "Healthy";
+      let summary = "Your plant is thriving!";
+      let details = "All vital signs are within the optimal range.";
+      let actions = ["Keep up the good work!", "Monitor for any sudden changes."];
+
+      if (m < 30) {
+        status = "Warning";
+        summary = "Low Soil Moisture";
+        details = `Soil moisture is critically low at ${m}%. The plant is at risk of dehydration.`;
+        actions = ["Water immediately until soil is saturated.", "Check soil drainage."];
+      } else if (t > 35) {
+        status = "Warning";
+        summary = "High Temperature";
+        details = `Temperature is ${t}°C, which is too high for this plant species.`;
+        actions = ["Move to a cooler location.", "Increase humidity if possible."];
+      }
+
+      setAiAdvice({ status, summary, details, actions });
+      setLoading(false);
+    }, 1500);
+  };
+
+  const handleAskFollowUp = () => {
+    if (!question.trim()) return;
+
+    const newHistory = [...chatHistory, { role: 'user', text: question }];
+    setChatHistory(newHistory);
+    setQuestion("");
+
+    // Simulate AI Response
+    setTimeout(() => {
+      let response = "That's a good question. Based on the current readings, I suggest keeping a close eye on the moisture levels.";
+      if (question.toLowerCase().includes("water")) {
+        response = "Since the moisture level is " + soilMoisture + "%, you " + (parseInt(soilMoisture) < 30 ? "should water it now." : "don't need to water yet.");
+      }
+      setChatHistory([...newHistory, { role: 'ai', text: response }]);
+    }, 1000);
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
+    <div className="min-h-screen bg-[#f0fdf4] dark:bg-gray-900 transition-colors duration-300">
       <Sidebar />
       <div className="lg:ml-64 flex flex-col min-h-screen">
         <Navbar />
 
-        <main className="flex-1 p-6 lg:p-8 pt-20">
-          {/* Page Header */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-3xl font-bold text-green-800 mb-2">Sensor Live Data</h2>
-                <p className="text-green-600">Real-time monitoring of your plant environment</p>
+        <main className="flex-1 p-6 lg:p-8 mt-28">
+          <div className="max-w-7xl mx-auto">
+            {/* Header */}
+            <div className="mb-10">
+              <h1 className="text-3xl font-bold text-green-900 dark:text-white tracking-tight mb-2">
+                Sensor <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-600">Readings</span>
+              </h1>
+              <p className="text-green-600 dark:text-gray-400">
+                Real-time monitoring and AI-driven insights for your plant.
+              </p>
+            </div>
+
+            {/* Sensor Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              {/* Temperature Card */}
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-sm border border-green-100 dark:border-gray-700 group hover:shadow-md transition-all">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="bg-orange-100 dark:bg-orange-500/20 p-3 rounded-2xl group-hover:scale-110 transition-transform">
+                    <Thermometer className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+                  </div>
+                </div>
+                <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Temperature</label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    value={temp}
+                    onChange={(e) => setTemp(e.target.value)}
+                    className="w-full bg-gray-50 dark:bg-gray-900 border-0 rounded-xl px-4 py-3 text-2xl font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500/20 transition-all outline-none"
+                    placeholder="--"
+                  />
+                  <span className="absolute right-4 top-3.5 text-gray-400 font-medium">°C</span>
+                </div>
               </div>
-              <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-lg shadow-md border-2 border-green-100">
-                <RefreshCw className="w-4 h-4 text-green-600 animate-spin" />
-                <span className="text-sm font-medium text-green-700">Auto-refresh: 3s</span>
+
+              {/* Humidity Card */}
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-sm border border-green-100 dark:border-gray-700 group hover:shadow-md transition-all">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="bg-blue-100 dark:bg-blue-500/20 p-3 rounded-2xl group-hover:scale-110 transition-transform">
+                    <Droplets className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                  </div>
+                </div>
+                <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Humidity</label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    value={humidity}
+                    onChange={(e) => setHumidity(e.target.value)}
+                    className="w-full bg-gray-50 dark:bg-gray-900 border-0 rounded-xl px-4 py-3 text-2xl font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 transition-all outline-none"
+                    placeholder="--"
+                  />
+                  <span className="absolute right-4 top-3.5 text-gray-400 font-medium">%</span>
+                </div>
+              </div>
+
+              {/* Soil Moisture Card */}
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-sm border border-green-100 dark:border-gray-700 group hover:shadow-md transition-all">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="bg-green-100 dark:bg-green-500/20 p-3 rounded-2xl group-hover:scale-110 transition-transform">
+                    <Sprout className="w-6 h-6 text-green-600 dark:text-green-400" />
+                  </div>
+                </div>
+                <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Soil Moisture</label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    value={soilMoisture}
+                    onChange={(e) => setSoilMoisture(e.target.value)}
+                    className="w-full bg-gray-50 dark:bg-gray-900 border-0 rounded-xl px-4 py-3 text-2xl font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500/20 transition-all outline-none"
+                    placeholder="--"
+                  />
+                  <span className="absolute right-4 top-3.5 text-gray-400 font-medium">%</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          {sensor ? (
-            <>
-              {/* Sensor Status Banner */}
-              <div className="mb-6 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl p-4 shadow-lg">
-                <div className="flex items-center justify-between text-white">
-                  <div className="flex items-center space-x-3">
-                    <div className="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
-                      <Activity className="w-5 h-5" />
+            {/* Action Buttons */}
+            <div className="flex justify-center space-x-4 mb-12">
+              <button
+                onClick={saveData}
+                className="px-8 py-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-bold rounded-xl shadow-sm border border-green-100 dark:border-gray-700 hover:bg-green-50 dark:hover:bg-gray-700 transition-all flex items-center space-x-2"
+              >
+                <Save className="w-5 h-5" />
+                <span>Save Readings</span>
+              </button>
+              <button
+                onClick={generateAIAdvice}
+                disabled={loading}
+                className="px-8 py-3 bg-[#006d32] hover:bg-green-800 text-white font-bold rounded-xl shadow-lg shadow-green-900/20 transform transition-all hover:scale-105 active:scale-95 flex items-center space-x-2 disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Bot className="w-5 h-5" />
+                )}
+                <span>{loading ? "Analyzing..." : "Get AI Advice"}</span>
+              </button>
+            </div>
+
+            {/* AI Advice Section */}
+            {aiAdvice && (
+              <div className="animate-in fade-in slide-in-from-bottom-8 duration-700">
+                <div className="bg-white dark:bg-gray-800 rounded-3xl overflow-hidden shadow-xl border border-green-100 dark:border-gray-700 mb-8">
+                  <div className="bg-[#006d32] p-6 text-white flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="bg-white/20 p-2 rounded-xl backdrop-blur-sm">
+                        <Sparkles className="w-6 h-6 text-yellow-300" />
+                      </div>
+                      <h2 className="text-xl font-bold">AI Diagnosis</h2>
                     </div>
-                    <div>
-                      <p className="font-semibold">All Sensors Active</p>
-                      <p className="text-sm text-green-100">Last updated: Just now</p>
+                    <div className="bg-white/20 px-4 py-1.5 rounded-full text-sm font-medium backdrop-blur-sm border border-white/10">
+                      Powered by Gemini
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                    <span className="text-sm font-medium">Live</span>
+
+                  <div className="p-8">
+                    <div className="flex items-start space-x-4 mb-8">
+                      <div className={`p-3 rounded-2xl ${aiAdvice.status === 'Healthy' ? 'bg-green-100 text-green-600' :
+                        aiAdvice.status === 'Warning' ? 'bg-orange-100 text-orange-600' :
+                          'bg-red-100 text-red-600'
+                        }`}>
+                        {aiAdvice.status === 'Healthy' ? <CheckCircle2 className="w-8 h-8" /> : <AlertTriangle className="w-8 h-8" />}
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{aiAdvice.summary}</h3>
+                        <p className="text-gray-600 dark:text-gray-300 leading-relaxed">{aiAdvice.details}</p>
+                      </div>
+                    </div>
+
+                    <div className="bg-green-50 dark:bg-green-900/10 rounded-2xl p-6 border border-green-100 dark:border-green-900/20">
+                      <h4 className="font-bold text-green-900 dark:text-green-400 mb-4 flex items-center">
+                        <Sprout className="w-5 h-5 mr-2" />
+                        Recommended Actions
+                      </h4>
+                      <ul className="space-y-3">
+                        {aiAdvice.actions.map((action, idx) => (
+                          <li key={idx} className="flex items-start text-gray-700 dark:text-gray-300">
+                            <span className="w-1.5 h-1.5 bg-green-500 rounded-full mt-2 mr-3 flex-shrink-0" />
+                            {action}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Sensor Data Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {/* Temperature Card */}
-                <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border-2 border-green-100 transform hover:-translate-y-1">
-                  <div className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="bg-gradient-to-br from-orange-100 to-orange-200 p-3 rounded-xl">
-                        <Thermometer className="w-7 h-7 text-orange-600" />
-                      </div>
-                      <div className="text-right">
-                        <span className="text-xs font-semibold text-orange-600 bg-orange-100 px-3 py-1 rounded-full">
-                          Active
-                        </span>
-                      </div>
-                    </div>
-                    <p className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">Temperature</p>
-                    <p className="text-4xl font-bold text-gray-800 mb-1">{sensor.temp} °C</p>
-                    <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
-                      <p className="text-xs text-gray-500">Optimal: 18-24°C</p>
-                      <div className={`w-2 h-2 rounded-full ${sensor.temp >= 18 && sensor.temp <= 24 ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
-                    </div>
-                  </div>
-                  <div className="h-2 bg-gradient-to-r from-orange-400 to-orange-500"></div>
-                </div>
-
-                {/* Humidity Card */}
-                <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border-2 border-green-100 transform hover:-translate-y-1">
-                  <div className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="bg-gradient-to-br from-blue-100 to-blue-200 p-3 rounded-xl">
-                        <Droplets className="w-7 h-7 text-blue-600" />
-                      </div>
-                      <div className="text-right">
-                        <span className="text-xs font-semibold text-blue-600 bg-blue-100 px-3 py-1 rounded-full">
-                          Active
-                        </span>
-                      </div>
-                    </div>
-                    <p className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">Humidity</p>
-                    <p className="text-4xl font-bold text-gray-800 mb-1">{sensor.humidity} %</p>
-                    <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
-                      <p className="text-xs text-gray-500">Optimal: 40-60%</p>
-                      <div className={`w-2 h-2 rounded-full ${sensor.humidity >= 40 && sensor.humidity <= 60 ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
-                    </div>
-                  </div>
-                  <div className="h-2 bg-gradient-to-r from-blue-400 to-blue-500"></div>
-                </div>
-
-                {/* Soil Moisture Card */}
-                <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border-2 border-green-100 transform hover:-translate-y-1">
-                  <div className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="bg-gradient-to-br from-green-100 to-green-200 p-3 rounded-xl">
-                        <Sprout className="w-7 h-7 text-green-600" />
-                      </div>
-                      <div className="text-right">
-                        <span className="text-xs font-semibold text-green-600 bg-green-100 px-3 py-1 rounded-full">
-                          Active
-                        </span>
-                      </div>
-                    </div>
-                    <p className="text-sm font-semibold text-gray-600 mb-2 uppercase tracking-wide">Soil Moisture</p>
-                    <p className="text-4xl font-bold text-gray-800 mb-1">{sensor.moisture}</p>
-                    <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
-                      <p className="text-xs text-gray-500">Keep soil moist</p>
-                      <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                    </div>
-                  </div>
-                  <div className="h-2 bg-gradient-to-r from-green-400 to-green-500"></div>
-                </div>
-              </div>
-
-              {/* Additional Info Panel */}
-              <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white rounded-xl shadow-lg p-6 border-2 border-green-100">
-                  <h3 className="text-lg font-semibold text-green-800 mb-3 flex items-center space-x-2">
-                    <Activity className="w-5 h-5" />
-                    <span>Sensor Health</span>
+                {/* Follow-up Chat */}
+                <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-green-100 dark:border-gray-700">
+                  <h3 className="font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+                    <MessageSquare className="w-5 h-5 mr-2 text-green-600" />
+                    Ask a follow-up question
                   </h3>
-                  <p className="text-gray-600 mb-4">All sensors are functioning optimally and transmitting data every 3 seconds.</p>
-                  <div className="flex items-center space-x-2">
-                    <div className="flex-1 bg-green-100 rounded-full h-2">
-                      <div className="bg-green-500 h-2 rounded-full" style={{width: '100%'}}></div>
-                    </div>
-                    <span className="text-sm font-semibold text-green-700">100%</span>
+
+                  <div className="space-y-4 mb-4 max-h-60 overflow-y-auto">
+                    {chatHistory.map((msg, idx) => (
+                      <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-[80%] p-3 rounded-2xl text-sm ${msg.role === 'user'
+                          ? 'bg-[#006d32] text-white rounded-br-none'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-bl-none'
+                          }`}>
+                          {msg.text}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex space-x-2">
+                    <input
+                      type="text"
+                      value={question}
+                      onChange={(e) => setQuestion(e.target.value)}
+                      placeholder="e.g., How often should I water?"
+                      className="flex-1 bg-gray-50 dark:bg-gray-900 border-0 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500/20 outline-none"
+                      onKeyPress={(e) => e.key === 'Enter' && handleAskFollowUp()}
+                    />
+                    <button
+                      onClick={handleAskFollowUp}
+                      className="bg-[#006d32] hover:bg-green-800 text-white p-3 rounded-xl transition-colors"
+                    >
+                      <Send className="w-5 h-5" />
+                    </button>
                   </div>
                 </div>
-
-                <div className="bg-gradient-to-br from-green-100 to-emerald-100 rounded-xl shadow-lg p-6 border-2 border-green-200">
-                  <h3 className="text-lg font-semibold text-green-800 mb-3">Quick Tips</h3>
-                  <ul className="space-y-2 text-sm text-green-700">
-                    <li className="flex items-start space-x-2">
-                      <span className="text-green-500 font-bold">•</span>
-                      <span>Monitor temperature during seasonal changes</span>
-                    </li>
-                    <li className="flex items-start space-x-2">
-                      <span className="text-green-500 font-bold">•</span>
-                      <span>Maintain humidity levels for healthy growth</span>
-                    </li>
-                    <li className="flex items-start space-x-2">
-                      <span className="text-green-500 font-bold">•</span>
-                      <span>Check soil moisture before watering</span>
-                    </li>
-                  </ul>
-                </div>
               </div>
-            </>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-20">
-              <div className="bg-white rounded-xl shadow-lg p-12 border-2 border-gray-200 text-center max-w-md">
-                <div className="bg-gray-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Activity className="w-10 h-10 text-gray-400 animate-pulse" />
-                </div>
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">Waiting for Sensor Data</h3>
-                <p className="text-gray-500">Connecting to sensors and retrieving live data...</p>
-                <div className="mt-6 flex justify-center space-x-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce" style={{animationDelay: '0s'}}></div>
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce" style={{animationDelay: '0.4s'}}></div>
-                </div>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
+          <AIChatbot />
         </main>
       </div>
     </div>

@@ -23,7 +23,7 @@ export default function Login() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-green-400 via-emerald-500 to-teal-600 p-4">
+    <div className="flex items-center justify-center min-h-screen bg-[#f0fdf4] p-4">
       {/* Decorative Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-32 h-32 bg-white/10 rounded-full blur-3xl"></div>
@@ -33,7 +33,7 @@ export default function Login() {
 
       <div className="relative w-full max-w-md">
         {/* Login Card */}
-        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+        <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-green-100 overflow-hidden">
           {/* Header Section */}
           <div className="bg-gradient-to-r from-green-600 to-emerald-600 p-8 text-center">
             <div className="flex justify-center mb-4">
@@ -41,7 +41,7 @@ export default function Login() {
                 <Leaf className="w-12 h-12 text-green-600" />
               </div>
             </div>
-            <h2 className="text-2xl font-bold text-white mb-2">Smart Plant System</h2>
+            <h2 className="text-2xl font-bold text-white mb-2">Smart Plant Monitoring System</h2>
             <p className="text-green-100 text-sm">Monitor and care for your plants</p>
           </div>
 
@@ -84,7 +84,7 @@ export default function Login() {
             </div>
 
             {/* Login Button */}
-            <button 
+            <button
               type="submit"
               className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 flex items-center justify-center space-x-2 font-semibold"
             >
@@ -96,8 +96,8 @@ export default function Login() {
             <div className="mt-6 text-center">
               <p className="text-gray-600 text-sm">
                 Don't have an account?{" "}
-                <Link 
-                  className="text-green-600 hover:text-green-700 font-semibold hover:underline transition-colors" 
+                <Link
+                  className="text-green-600 hover:text-green-700 font-semibold hover:underline transition-colors"
                   to="/register"
                 >
                   Register Now
@@ -108,7 +108,7 @@ export default function Login() {
         </div>
 
         {/* Footer Text */}
-        <p className="text-center mt-6 text-white text-sm drop-shadow-lg">
+        <p className="text-center mt-6 text-green-800 text-sm font-medium">
           🌱 Keeping your plants healthy and thriving
         </p>
       </div>

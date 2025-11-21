@@ -44,7 +44,7 @@ export default function Settings() {
       <div className="lg:ml-64 flex flex-col min-h-screen">
         <Navbar />
 
-        <main className="flex-1 p-6 lg:p-8 pt-20">
+        <main className="flex-1 p-6 lg:p-8 mt-28">
           {/* Page Header */}
           <div className="mb-8">
             <h2 className="text-3xl font-bold text-green-800 mb-2">Settings</h2>
@@ -54,8 +54,8 @@ export default function Settings() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Settings Form */}
             <div className="lg:col-span-2">
-              <form 
-                className="bg-white rounded-xl shadow-lg p-8 border-2 border-green-100" 
+              <form
+                className="bg-white rounded-xl shadow-lg p-8 border-2 border-green-100"
                 onSubmit={updateSettings}
               >
                 <div className="flex items-center space-x-3 mb-6 pb-6 border-b border-gray-200">
@@ -109,7 +109,7 @@ export default function Settings() {
                 </div>
 
                 {/* Save Button */}
-                <button 
+                <button
                   type="submit"
                   className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 flex items-center justify-center space-x-2 font-semibold"
                 >
@@ -146,7 +146,7 @@ export default function Settings() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="bg-yellow-50 rounded-lg p-4">
                     <div className="flex items-start space-x-2">
                       <Zap className="w-4 h-4 text-yellow-600 mt-1 flex-shrink-0" />
